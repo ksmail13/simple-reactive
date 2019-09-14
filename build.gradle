@@ -1,0 +1,25 @@
+plugins {
+    id 'java'
+    id 'idea'
+}
+
+group 'io.github.ksmail13'
+version '0.1'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile group: 'org.reactivestreams', name:'reactive-streams', version:'1.0.3'
+    compileOnly 'org.projectlombok:lombok:1.18.10'
+    testCompileOnly 'org.projectlombok:lombok:1.18.10'
+    annotationProcessor 'org.projectlombok:lombok:1.18.10'
+
+    testCompile "org.assertj:assertj-core:3.11.1"
+    testCompile group: 'org.reactivestreams', name:'reactive-streams-tck', version:'1.0.3'
+
+    testCompile 'junit:junit:4.12'
+}
