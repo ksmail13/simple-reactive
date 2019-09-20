@@ -4,6 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
+/**
+ * Get data safely from array
+ *
+ * @param <T> data type
+ */
 public class SafeArrayGetter<T> implements SafeGetter<T> {
 
     private final T[] data;
@@ -17,7 +22,7 @@ public class SafeArrayGetter<T> implements SafeGetter<T> {
 
     @Override
     public List<T> getElements(long n) {
-        List<T> result = new ArrayList<T>((int) n);
+        List<T> result = new ArrayList<>();
         long end = curr.get() + n;
         while (curr.get() < end && curr.get() < data.length) {
             result.add(data[(int) curr.get()]);

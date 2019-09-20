@@ -5,6 +5,11 @@ import lombok.RequiredArgsConstructor;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
+/**
+ * subscript one item
+ *
+ * @param <T> data type
+ */
 @RequiredArgsConstructor
 class SubscriptionOne<T> implements Subscription {
 

@@ -19,8 +19,13 @@ class SubscriptionSequence<T> implements Subscription {
         }
 
         try {
-            dataGetter.getElements(n).forEach(subscriber::onNext);
-            if (dataGetter.isEnd()) {
+            for (T element : dataGetter.getElements(n)) {
+                if (stopped) {
+                    break;
+                }
+                subscriber.onNext(element);
+            }
+            if (dataGetter.isEnd() || stopped) {
                 subscriber.onComplete();
             }
         } catch (Exception e) {
