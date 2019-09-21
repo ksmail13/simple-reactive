@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 public class AssertSubscriber<T> implements Subscriber<T> {
     private List<T> results = new ArrayList<>();
@@ -16,6 +17,8 @@ public class AssertSubscriber<T> implements Subscriber<T> {
 
     private Throwable expectError;
     private T[] expectResult;
+
+    private boolean complete;
 
     private int count = Integer.MAX_VALUE;
 
@@ -55,6 +58,12 @@ public class AssertSubscriber<T> implements Subscriber<T> {
 
     @Override
     public void onComplete() {
+        if (complete) {
+            fail("duplicate end");
+        }
+
+        complete = true;
+
         if (expectResult != null) {
             assertThat(results).contains(expectResult);
         }

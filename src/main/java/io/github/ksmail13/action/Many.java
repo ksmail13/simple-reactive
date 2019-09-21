@@ -22,7 +22,7 @@ public interface Many<T> extends Publisher<T> {
      * @return single data producer
      */
     static <V> Many<V> just(V data) {
-        return subscriber -> subscriber.onSubscribe(new SubscriptionOne<>(data, subscriber));
+        return subscriber -> subscriber.onSubscribe(LazySubscription.of(() -> new SubscriptionOne<>(data, subscriber)));
     }
 
     /**
@@ -32,7 +32,7 @@ public interface Many<T> extends Publisher<T> {
      * @return array data producer
      */
     static <V> Many<V> just(V... data) {
-        return s -> s.onSubscribe(new SubscriptionSequence<>(new SafeArrayGetter<>(data), s));
+        return s -> s.onSubscribe(LazySubscription.of(() -> new SubscriptionSequence<>(new SafeArrayGetter<>(data), s)));
     }
 
     /**
@@ -42,7 +42,7 @@ public interface Many<T> extends Publisher<T> {
      * @return collection data producer
      */
     static <V> Many<V> fromSequence(Collection<V> data) {
-        return s -> s.onSubscribe(new SubscriptionSequence<>(new SafeSequenceGetter<>(data), s));
+        return s -> s.onSubscribe(LazySubscription.of(() -> new SubscriptionSequence<>(new SafeSequenceGetter<>(data), s)));
     }
 
     /**
@@ -53,6 +53,14 @@ public interface Many<T> extends Publisher<T> {
      */
     static <V> Many<V> fromSequence(Iterator<V> data) {
         return s -> s.onSubscribe(new SubscriptionSequence<>(new SafeIteratorGetter<>(data), s));
+    }
+
+    default Many<T> take(long cnt) {
+        return s -> s.onSubscribe(LazySubscription.of(() -> {
+            TakeSubscription<T> s1 = new TakeSubscription<>(s, cnt);
+            this.subscribe(s1);
+            return s1;
+        }));
     }
 
     default void subscribe(Consumer<T> onNext) {

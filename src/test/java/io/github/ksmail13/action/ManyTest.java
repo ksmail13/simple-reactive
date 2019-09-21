@@ -50,4 +50,13 @@ public class ManyTest {
         subscriber.assertion().startsWith(1, 2, 3, 4, 5);
     }
 
+    @Test
+    public void testTake() {
+        AssertSubscriber<Integer> subscriber = new AssertSubscriber<>();
+        subscriber.setCount(5);
+        Many.fromSequence(IntStream.iterate(1, i -> i + 1).iterator())
+                .take(3).subscribe(subscriber);
+        subscriber.assertion().containsExactly(1, 2, 3);
+    }
+
 }
