@@ -55,6 +55,15 @@ public interface Many<T> extends Publisher<T> {
         return s -> s.onSubscribe(new SubscriptionSequence<>(new SafeIteratorGetter<>(data), s));
     }
 
+    /**
+     * take some n of datas
+     * @param n n is
+     * @return
+     */
+    default Many<T> take(int n) {
+        return s -> s.onSubscribe(new TakeManySubscription<T>(this, n, s));
+    }
+
     default void subscribe(Consumer<T> onNext) {
         this.subscribe(onNext, EmptyErrorHandler.INSTANCE, EmptyCompleteHandler.INSTANCE);
     }

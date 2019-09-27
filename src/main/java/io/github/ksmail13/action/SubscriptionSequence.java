@@ -2,9 +2,13 @@ package io.github.ksmail13.action;
 
 import io.github.ksmail13.util.SafeGetter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
+import java.util.List;
+
+@Slf4j
 @RequiredArgsConstructor
 class SubscriptionSequence<T> implements Subscription {
 
@@ -17,10 +21,17 @@ class SubscriptionSequence<T> implements Subscription {
         if (stopped) {
             return;
         }
-
+        log.trace("requested {} datas", n);
         try {
-            dataGetter.getElements(n).forEach(subscriber::onNext);
-            if (dataGetter.isEnd()) {
+            List<T> elements = dataGetter.getElements(n);
+            for (T element : elements) {
+                if (stopped) {
+                    break;
+                }
+                subscriber.onNext(element);
+            }
+
+            if (dataGetter.isEnd() || stopped) {
                 subscriber.onComplete();
             }
         } catch (Exception e) {
