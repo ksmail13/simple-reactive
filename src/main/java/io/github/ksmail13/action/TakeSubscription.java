@@ -51,7 +51,7 @@ public class TakeSubscription<T> implements Subscription, Subscriber<T> {
             subscriber.onNext(t);
         }
 
-        if (cnt.get() <= 0) {
+        if (cnt.get() == 0) {
             onComplete();
         }
     }

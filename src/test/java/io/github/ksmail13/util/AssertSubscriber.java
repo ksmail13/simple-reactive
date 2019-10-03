@@ -48,6 +48,7 @@ public class AssertSubscriber<T> implements Subscriber<T> {
 
     @Override
     public void onNext(T t) {
+        System.out.printf("[%s] data: %s\n", Thread.currentThread().getName(), t.toString());
         results.add(t);
     }
 
