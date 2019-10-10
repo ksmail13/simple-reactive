@@ -1,6 +1,7 @@
 package io.github.ksmail13.action;
 
 import io.github.ksmail13.schedule.Scheduler;
+import io.github.ksmail13.schedule.Worker;
 import lombok.RequiredArgsConstructor;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -11,6 +12,8 @@ class SubscriptionSubscribeOn<T> implements Subscription, Subscriber<T> {
     private final Subscriber<T> next;
     private Subscription beforeSubscription;
 
+    private Worker worker;
+
     @Override
     public void onSubscribe(Subscription s) {
         beforeSubscription = s;
@@ -18,21 +21,22 @@ class SubscriptionSubscribeOn<T> implements Subscription, Subscriber<T> {
 
     @Override
     public void onNext(T t) {
-        scheduler.work(() -> next.onNext(t));
+        worker.push(() -> next.onNext(t));
     }
 
     @Override
     public void onError(Throwable t) {
-        scheduler.work(() -> next.onError(t));
+        worker.push(() -> next.onError(t));
     }
 
     @Override
     public void onComplete() {
-        scheduler.work(next::onComplete);
+        worker.push(next::onComplete);
     }
 
     @Override
     public void request(long n) {
+        worker = scheduler.worker();
         beforeSubscription.request(n);
     }
 

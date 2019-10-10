@@ -20,6 +20,12 @@ class PooledScheduler implements Scheduler {
         }
     }
 
+    @Override
+    public Worker worker() {
+        Worker worker = workers.get(curr++);
+        curr %= workers.size();
+        return worker;
+    }
 
     @Override
     public void work(Runnable runnable) {
