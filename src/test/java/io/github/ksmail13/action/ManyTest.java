@@ -76,6 +76,7 @@ public class ManyTest {
         subscriber.setCount(5);
         Many.fromSequence(IntStream.iterate(1, i -> i + 1).iterator())
                 .map(i -> i + 1)
+                .take(4)
                 .subscribeOn(Schedulers.POOLED)
                 .map(i -> i + 1)
                 .subscribeOn(Schedulers.POOLED)
