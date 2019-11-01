@@ -3,6 +3,7 @@ package io.github.ksmail13.action;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class TakeSubscription<T> implements Subscription, Subscriber<T> {
@@ -11,7 +12,7 @@ public class TakeSubscription<T> implements Subscription, Subscriber<T> {
     private Subscription subscription;
 
     private volatile AtomicLong cnt;
-    private boolean complete;
+    private volatile AtomicBoolean complete;
 
     /**
      * cnt 만큼만 사용한다.
@@ -21,11 +22,13 @@ public class TakeSubscription<T> implements Subscription, Subscriber<T> {
     public TakeSubscription(Subscriber<? super T> s, long cnt) {
         this.subscriber = s;
         this.cnt = new AtomicLong(cnt);
+        this.complete = new AtomicBoolean(false);
+
     }
 
     @Override
     public void request(long n) {
-        if (cnt.get() > 0 || !complete) {
+        if (cnt.get() > 0 || !complete.get()) {
             subscription.request(n);
         }
     }
@@ -33,7 +36,7 @@ public class TakeSubscription<T> implements Subscription, Subscriber<T> {
     @Override
     public void cancel() {
         subscription.cancel();
-        complete = true;
+        complete.set(true);
     }
 
     @Override
@@ -43,7 +46,7 @@ public class TakeSubscription<T> implements Subscription, Subscriber<T> {
 
     @Override
     public void onNext(T t) {
-        if (complete) {
+        if (complete.get()) {
             return;
         }
 
@@ -63,7 +66,9 @@ public class TakeSubscription<T> implements Subscription, Subscriber<T> {
 
     @Override
     public void onComplete() {
-        complete = true;
-        subscriber.onComplete();
+        if (!complete.getAndSet(true)) {
+            subscription.cancel();
+            subscriber.onComplete();
+        }
     }
 }

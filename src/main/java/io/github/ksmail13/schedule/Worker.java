@@ -7,10 +7,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class Worker extends Thread {
 
     private Queue<Runnable> works = new LinkedBlockingQueue<>();
-    private AtomicBoolean working = new AtomicBoolean(false);
+    private volatile AtomicBoolean working = new AtomicBoolean(false);
 
     Worker(String s) {
         super(s);
+        setDaemon(true);
     }
 
     @Override

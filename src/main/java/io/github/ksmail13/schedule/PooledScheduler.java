@@ -24,6 +24,7 @@ class PooledScheduler implements Scheduler {
     public Worker worker() {
         Worker worker = workers.get(curr++);
         curr %= workers.size();
+        System.out.printf("return worker(%s)\n", worker.getName());
         return worker;
     }
 
