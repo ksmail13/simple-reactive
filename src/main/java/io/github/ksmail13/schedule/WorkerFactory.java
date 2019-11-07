@@ -3,14 +3,20 @@ package io.github.ksmail13.schedule;
 import lombok.RequiredArgsConstructor;
 
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @RequiredArgsConstructor
-class WorkerFactory {
+class WorkerFactory implements ThreadFactory {
 
     private final String name;
-    private int cnt = 0;
+    private AtomicInteger cnt = new AtomicInteger();
 
     Worker newWorker() {
-        return new Worker(name + "-" + cnt++);
+        return new Worker(name + "-" + cnt.getAndIncrement());
+    }
+
+    @Override
+    public Thread newThread(Runnable runnable) {
+        return newWorker();
     }
 }

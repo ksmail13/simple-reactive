@@ -6,5 +6,17 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class Schedulers {
 
-    public static final Scheduler POOLED = new PooledScheduler();
+    private static final Scheduler POOLED = new PooledScheduler();
+
+    public static Scheduler pooled() {
+        return POOLED;
+    }
+
+    public static Scheduler newPooled() {
+        return new PooledScheduler();
+    }
+
+    public static Scheduler newPooled(int parallelism) {
+        return new PooledScheduler(parallelism);
+    }
 }

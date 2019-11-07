@@ -11,9 +11,14 @@ class PooledScheduler implements Scheduler {
     }
 
     public PooledScheduler(int cnt) {
-        WorkerFactory factory = new WorkerFactory("Pooled");
+        this("Pooled", cnt);
+    }
+
+    public PooledScheduler(String name, int parallelism) {
+        WorkerFactory factory = new WorkerFactory(name);
         workers = new LinkedList<>();
-        while(cnt-- > 0) {
+
+        while(parallelism-- > 0) {
             Worker worker = factory.newWorker();
             workers.add(worker);
             worker.start();
