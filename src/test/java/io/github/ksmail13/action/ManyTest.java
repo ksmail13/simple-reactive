@@ -2,12 +2,17 @@ package io.github.ksmail13.action;
 
 import io.github.ksmail13.schedule.Schedulers;
 import io.github.ksmail13.util.AssertSubscriber;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
 public class ManyTest {
+
+    @Before
+    public void init() {
+    }
 
     @Test
     public void testSingle() {
@@ -77,9 +82,9 @@ public class ManyTest {
         Many.fromSequence(IntStream.iterate(1, i -> i + 1).iterator())
                 .map(i -> i + 1)
                 .take(4)
-                .subscribeOn(Schedulers.POOLED)
+                .subscribeOn(Schedulers.pooled())
                 .map(i -> i + 1)
-                .subscribeOn(Schedulers.POOLED)
+                .subscribeOn(Schedulers.pooled())
                 .take(3).subscribe(subscriber);
 
         Thread.sleep(500);

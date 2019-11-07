@@ -35,7 +35,11 @@ public class LazySubscription implements Subscription {
 
     private void setSubscription() {
         if (UPDATER.get(this) == null) {
-            UPDATER.lazySet(this, subscriptionSupplier.get());
+            UPDATER.set(this, subscriptionSupplier.get());
         }
+    }
+
+    public Subscription getSubscription() {
+        return UPDATER.get(this);
     }
 }

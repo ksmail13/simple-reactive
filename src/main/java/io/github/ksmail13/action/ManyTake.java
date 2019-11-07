@@ -11,7 +11,7 @@ class ManyTake<T> extends Many<T> {
     @Override
     public void subscribe(Subscriber<? super T> s) {
         s.onSubscribe(LazySubscription.of(() -> {
-            TakeSubscription<T> s1 = new TakeSubscription<>(s, cnt);
+            ManyTakeOperator<T> s1 = new ManyTakeOperator<>(s, cnt);
             source.subscribe(s1);
             return s1;
         }));
