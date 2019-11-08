@@ -82,9 +82,9 @@ public class ManyTest {
         Many.fromSequence(IntStream.iterate(1, i -> i + 1).iterator())
                 .map(i -> i + 1)
                 .take(4)
-                .subscribeOn(Schedulers.pooled())
+                .subscribeOn(Schedulers.pooled()) // POOLED-0
                 .map(i -> i + 1)
-                .subscribeOn(Schedulers.pooled())
+                .subscribeOn(Schedulers.pooled()) // POOLED-1
                 .take(3).subscribe(subscriber);
 
         Thread.sleep(500);

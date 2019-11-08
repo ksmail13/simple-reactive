@@ -9,11 +9,13 @@ class SubscriptionSubscribeOn<T> implements Subscription, Subscriber<T> {
     private final Subscriber<T> next;
     private Subscription beforeSubscription;
 
-    private Worker worker;
+    private final Worker worker;
+    private final String name;
 
     public SubscriptionSubscribeOn(Scheduler scheduler, Subscriber<T> next) {
         this.next = next;
         this.worker = scheduler.worker();
+        this.name = this.worker.getName();
     }
 
     @Override
@@ -44,5 +46,10 @@ class SubscriptionSubscribeOn<T> implements Subscription, Subscriber<T> {
     @Override
     public void cancel() {
         beforeSubscription.cancel();
+    }
+
+    @Override
+    public String toString() {
+        return "SubscriptionSubscribeOn with Thread[" + name + "]";
     }
 }

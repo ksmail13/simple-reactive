@@ -5,13 +5,16 @@ import org.reactivestreams.Subscription;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import java.util.function.Supplier;
 
+/**
+ * initialize subscription lazily
+ */
 public class LazySubscription implements Subscription {
 
     private final Supplier<Subscription> subscriptionSupplier;
-    private volatile Subscription subscriber;
+    private volatile Subscription subscription;
 
-    private static final AtomicReferenceFieldUpdater<LazySubscription, Subscription> UPDATER =
-            AtomicReferenceFieldUpdater.newUpdater(LazySubscription.class, Subscription.class, "subscriber");
+    private static final AtomicReferenceFieldUpdater<LazySubscription, Subscription> SUBSCRIPTION =
+            AtomicReferenceFieldUpdater.newUpdater(LazySubscription.class, Subscription.class, "subscription");
 
     public static LazySubscription of(Supplier<Subscription> subscriptionSupplier) {
         return new LazySubscription(subscriptionSupplier);
@@ -24,22 +27,32 @@ public class LazySubscription implements Subscription {
     @Override
     public void request(long n) {
         setSubscription();
-        subscriber.request(n);
+        subscription.request(n);
     }
 
     @Override
     public void cancel() {
         setSubscription();
-        subscriber.cancel();
+        subscription.cancel();
     }
 
+    /**
+     * 기존에 생성된 subscription이 없을 경우
+     * 새로 생성하여 필드에 바인딩한다.
+     */
     private void setSubscription() {
-        if (UPDATER.get(this) == null) {
-            UPDATER.set(this, subscriptionSupplier.get());
+        if (SUBSCRIPTION.get(this) == null) {
+            SUBSCRIPTION.set(this, subscriptionSupplier.get());
         }
     }
 
+    /**
+     * 생성된 subscription을 리턴
+     * 없을 경우 새로 생성
+     * @return 내부 subscription
+     */
     public Subscription getSubscription() {
-        return UPDATER.get(this);
+        setSubscription();
+        return SUBSCRIPTION.get(this);
     }
 }

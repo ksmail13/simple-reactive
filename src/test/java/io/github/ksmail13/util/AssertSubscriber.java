@@ -1,5 +1,7 @@
 package io.github.ksmail13.util;
 
+import lombok.Setter;
+import lombok.extern.java.Log;
 import org.assertj.core.api.AbstractThrowableAssert;
 import org.assertj.core.api.ListAssert;
 import org.reactivestreams.Subscriber;
@@ -11,8 +13,11 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
+@Log
 public class AssertSubscriber<T> implements Subscriber<T> {
     private List<T> results = new ArrayList<>();
+    @Setter
+    private ListenSubscriber<T> eventListener = new LogListenSubscriber<>();
     private Throwable error;
 
     private Throwable expectError;
@@ -43,22 +48,35 @@ public class AssertSubscriber<T> implements Subscriber<T> {
 
     @Override
     public void onSubscribe(Subscription s) {
+        if(eventListener != null) {
+            eventListener.onSubscribe(s);
+        }
         s.request(count);
     }
 
     @Override
     public void onNext(T t) {
-        System.out.printf("[%s] data: %s\n", Thread.currentThread().getName(), t.toString());
+        if (eventListener != null) {
+            eventListener.onNext(t);
+        }
         results.add(t);
     }
 
     @Override
     public void onError(Throwable t) {
+        if (eventListener != null) {
+            eventListener.onError(t);
+        }
+
         error = t;
     }
 
     @Override
     public void onComplete() {
+        if (eventListener != null) {
+            eventListener.onComplete();
+        }
+
         if (complete) {
             fail("duplicate end");
         }
