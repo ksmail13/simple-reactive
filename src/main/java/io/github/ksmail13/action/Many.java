@@ -1,77 +1,88 @@
 package io.github.ksmail13.action;
 
-import io.github.ksmail13.util.SafeArrayGetter;
+import io.github.ksmail13.schedule.Scheduler;
 import io.github.ksmail13.util.SafeIteratorGetter;
 import io.github.ksmail13.util.SafeSequenceGetter;
 import org.reactivestreams.Publisher;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * Base Publisher type
+ *
  * @param <T> data type
  */
-public interface Many<T> extends Publisher<T> {
+public abstract class Many<T> implements Publisher<T> {
 
     /**
      * produce only single data
+     *
      * @param data data
-     * @param <V> data type
+     * @param <V>  data type
      * @return single data producer
      */
-    static <V> Many<V> just(V data) {
-        return subscriber -> subscriber.onSubscribe(LazySubscription.of(() -> new SubscriptionOne<>(data, subscriber)));
+    public static <V> Many<V> just(V data) {
+        return new ManyJust<>(data);
     }
 
     /**
      * produce data from array
+     *
      * @param data data
-     * @param <V> data type
+     * @param <V>  data type
      * @return array data producer
      */
-    static <V> Many<V> just(V... data) {
-        return s -> s.onSubscribe(LazySubscription.of(() -> new SubscriptionSequence<>(new SafeArrayGetter<>(data), s)));
+    public static <V> Many<V> just(V... data) {
+        return new ManyArray<>(data);
     }
 
     /**
      * produce data from collection
+     *
      * @param data data
-     * @param <V> data type
+     * @param <V>  data type
      * @return collection data producer
      */
-    static <V> Many<V> fromSequence(Collection<V> data) {
-        return s -> s.onSubscribe(LazySubscription.of(() -> new SubscriptionSequence<>(new SafeSequenceGetter<>(data), s)));
+    public static <V> Many<V> fromSequence(Collection<V> data) {
+        return new ManySequence<>(new SafeSequenceGetter<>(data));
     }
 
     /**
      * produce data from iterator
+     *
      * @param data data iterator
-     * @param <V> data type
+     * @param <V>  data type
      * @return iterator data producer
      */
-    static <V> Many<V> fromSequence(Iterator<V> data) {
-        return s -> s.onSubscribe(new SubscriptionSequence<>(new SafeIteratorGetter<>(data), s));
+    public static <V> Many<V> fromSequence(Iterator<V> data) {
+        return new ManySequence<>(new SafeIteratorGetter<>(data));
     }
 
-    default Many<T> take(long cnt) {
-        return s -> s.onSubscribe(LazySubscription.of(() -> {
-            TakeSubscription<T> s1 = new TakeSubscription<>(s, cnt);
-            this.subscribe(s1);
-            return s1;
-        }));
+    public Many<T> take(long cnt) {
+        return new ManyTake<>(this, cnt);
     }
 
-    default void subscribe(Consumer<T> onNext) {
+    public <R> Many<R> map(Function<T, R> transform) {
+        return new ManyMap<>(this, transform);
+    }
+
+    public Many<T> subscribeOn(Scheduler executorService) {
+        return new ManySubscribeOn<>(this, executorService);
+    }
+
+    public void subscribe(Consumer<T> onNext) {
         this.subscribe(onNext, EmptyErrorHandler.INSTANCE, EmptyCompleteHandler.INSTANCE);
     }
 
-    default void subscribe(Consumer<T> onNext, Consumer<Throwable> onError) {
+    public void subscribe(Consumer<T> onNext, Consumer<Throwable> onError) {
         this.subscribe(onNext, onError, EmptyCompleteHandler.INSTANCE);
     }
 
-    default void subscribe(Consumer<T> onNext, Consumer<Throwable> onError, Runnable onComplete) {
+    public void subscribe(Consumer<T> onNext, Consumer<Throwable> onError, Runnable onComplete) {
         this.subscribe(new SimpleSubscriber<>(onNext, onError, onComplete));
     }
 
