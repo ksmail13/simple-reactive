@@ -5,20 +5,20 @@ import io.github.ksmail13.schedule.Worker;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
+import java.util.Iterator;
 import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import java.util.function.Supplier;
 
-class SubscriptionPublishOn<T> implements PollSubscription<T>, Subscriber<T>, Runnable {
-
-    private final Many<T> before;
+class SubscriptionPublishOn<T> extends QueueSubscription<T> implements Subscriber<T>, Runnable {
     private final Subscriber<? super T> actual;
     private final Supplier<BlockingQueue<T>> queueSupplier;
     private final Worker worker;
 
-    private boolean poll = false;
+    private volatile boolean poll = false;
+    private volatile AtomicBoolean running = new AtomicBoolean();
 
     private Queue<T> q;
     private Subscription s;
@@ -29,8 +29,7 @@ class SubscriptionPublishOn<T> implements PollSubscription<T>, Subscriber<T>, Ru
 
     private AtomicBoolean complete = new AtomicBoolean(false);
 
-    public SubscriptionPublishOn(Many<T> before, Subscriber<? super T> actual, Scheduler scheduler, Supplier<BlockingQueue<T>> o) {
-        this.before = before;
+    public SubscriptionPublishOn(Subscriber<? super T> actual, Scheduler scheduler, Supplier<BlockingQueue<T>> o) {
         this.actual = actual;
         this.queueSupplier = o;
         this.worker = scheduler.worker();
@@ -57,7 +56,7 @@ class SubscriptionPublishOn<T> implements PollSubscription<T>, Subscriber<T>, Ru
     @Override
     public void onSubscribe(Subscription s) {
         this.s = s;
-        poll = s instanceof PollSubscription;
+        poll = s instanceof QueueSubscription;
         if (poll) {
             q = queueSupplier.get();
         }
@@ -67,7 +66,7 @@ class SubscriptionPublishOn<T> implements PollSubscription<T>, Subscriber<T>, Ru
     public void onNext(T t) {
         if (!poll) {
             q.add(t);
-        } else {
+        } else if (!running.get()) {
             worker.push(this);
         }
     }
@@ -84,11 +83,14 @@ class SubscriptionPublishOn<T> implements PollSubscription<T>, Subscriber<T>, Ru
 
     @Override
     public void run() {
+        running.set(true);
+        if (complete.get()) {
+            return;
+        }
 
-    }
-
-    @Override
-    public T poll() {
-        return q.poll();
+        if (!q.isEmpty()) {
+            actual.onNext(poll());
+        }
+        worker.push(this);
     }
 }

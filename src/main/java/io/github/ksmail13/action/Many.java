@@ -70,8 +70,12 @@ public abstract class Many<T> implements Publisher<T> {
         return new ManyMap<>(this, transform);
     }
 
-    public Many<T> subscribeOn(Scheduler executorService) {
-        return new ManySubscribeOn<>(this, executorService);
+    public Many<T> subscribeOn(Scheduler scheduler) {
+        return new ManySubscribeOn<>(this, scheduler);
+    }
+
+    public Many<T> publishOn(Scheduler scheduler) {
+        return new ManyPublishOn<T>(this, scheduler);
     }
 
     public void subscribe(Consumer<T> onNext) {

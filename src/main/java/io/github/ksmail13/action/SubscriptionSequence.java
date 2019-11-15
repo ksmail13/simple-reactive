@@ -7,7 +7,7 @@ import org.reactivestreams.Subscriber;
 import java.util.List;
 
 @RequiredArgsConstructor
-class SubscriptionSequence<T> implements PollSubscription<T> {
+class SubscriptionSequence<T> extends QueueSubscription<T> {
 
     private final SafeGetter<T> dataGetter;
     private final Subscriber<? super T> subscriber;
