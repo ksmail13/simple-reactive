@@ -57,8 +57,10 @@ class SubscriptionPublishOn<T> extends QueueSubscription<T> implements Subscribe
     public void onSubscribe(Subscription s) {
         this.s = s;
         poll = s instanceof QueueSubscription;
-        if (poll) {
+        if (!poll) {
             q = queueSupplier.get();
+        } else {
+            q = this.s;
         }
     }
 
@@ -66,7 +68,9 @@ class SubscriptionPublishOn<T> extends QueueSubscription<T> implements Subscribe
     public void onNext(T t) {
         if (!poll) {
             q.add(t);
-        } else if (!running.get()) {
+        }
+
+        if (!running.get()) {
             worker.push(this);
         }
     }

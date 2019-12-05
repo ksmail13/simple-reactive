@@ -91,4 +91,19 @@ public class ManyTest {
 
         subscriber.assertion().size().isEqualTo(3);
     }
+
+    @Test
+    public void testPublishOn() throws InterruptedException {
+        AssertSubscriber<Integer> subscriber = new AssertSubscriber<>();
+        subscriber.setCount(5);
+        Many.fromSequence(IntStream.iterate(1, i -> i + 1).iterator())
+                .publishOn(Schedulers.pooled()) // POOLED-0
+                .map(i -> i + 1)
+                .take(4)
+                .subscribe(subscriber);
+
+        Thread.sleep(500);
+
+        subscriber.assertion().size().isEqualTo(4);
+    }
 }

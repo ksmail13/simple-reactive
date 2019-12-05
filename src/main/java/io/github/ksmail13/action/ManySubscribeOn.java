@@ -11,8 +11,10 @@ class ManySubscribeOn<T> extends Many<T> {
 
     @Override
     public void subscribe(Subscriber<? super T> s) {
-        SubscriptionSubscribeOn<? super T> s1 = new SubscriptionSubscribeOn<>(scheduler, s);
-        before.subscribe(s1);
-        s.onSubscribe(s1);
+        s.onSubscribe(LazySubscription.of(() -> {
+            SubscriptionSubscribeOn<? super T> s1 = new SubscriptionSubscribeOn<>(scheduler, s);
+            before.subscribe(s1);
+            return s1;
+        }));
     }
 }

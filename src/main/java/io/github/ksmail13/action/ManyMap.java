@@ -13,8 +13,10 @@ class ManyMap<T, R> extends Many<R> {
 
     @Override
     public void subscribe(Subscriber<? super R> s) {
-        ManyMapOperator<T, R> trManyMapOperator = new ManyMapOperator<>(transform, s);
-        before.subscribe(trManyMapOperator);
-        s.onSubscribe(trManyMapOperator);
+        s.onSubscribe(LazySubscription.of(() -> {
+            ManyMapOperator<T, R> trManyMapOperator = new ManyMapOperator<>(transform, s);
+            before.subscribe(trManyMapOperator);
+            return trManyMapOperator;
+        }));
     }
 }
